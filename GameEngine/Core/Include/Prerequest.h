@@ -31,10 +31,19 @@ typedef unsigned __int64 uint64;
 #include <map>
 #include <list>
 #include <stack>
-
-#include <math.h>
-#include <assert.h>
-#include <stdlib.h>
 #include <string>
+
+#include <windows.h>
+#include <assert.h>
+#include <stdio.h>
+#include <mmsystem.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <algorithm>
+#include <math.h>
+#include <fstream>
 #include <sstream>
+
+using namespace std;
+
 #endif

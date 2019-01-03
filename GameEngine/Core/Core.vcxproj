@@ -16,8 +16,14 @@
     <ClInclude Include="Include\Core.h" />
     <ClInclude Include="Include\DataChunkWrite.h" />
     <ClInclude Include="Include\GameTimer.h" />
+    <ClInclude Include="Include\Matrix4x4.h" />
+    <ClInclude Include="Include\Mesh.h" />
+    <ClInclude Include="Include\MathTemp.h" />
     <ClInclude Include="Include\Prerequest.h" />
+    <ClInclude Include="Include\Quaternion.h" />
     <ClInclude Include="Include\Singleton.h" />
+    <ClInclude Include="Include\Vector2.h" />
+    <ClInclude Include="Include\Vector3.h" />
     <ClInclude Include="Include\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
@@ -25,7 +31,13 @@
     <ClCompile Include="Src\Color.cpp" />
     <ClCompile Include="Src\DataChunkWrite.cpp" />
     <ClCompile Include="Src\GameTimer.cpp" />
+    <ClCompile Include="Src\Matrix4x4.cpp" />
+    <ClCompile Include="Src\Mesh.cpp" />
+    <ClCompile Include="Src\MathTemp.cpp" />
+    <ClCompile Include="Src\Quaternion.cpp" />
     <ClCompile Include="Src\Singleton.cpp" />
+    <ClCompile Include="Src\Vector2.cpp" />
+    <ClCompile Include="Src\Vector3.cpp" />
     <ClCompile Include="Src\Vector4.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
