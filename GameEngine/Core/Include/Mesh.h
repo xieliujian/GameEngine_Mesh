@@ -1,16 +1,21 @@
 
-#ifndef __OgreMdx_h__
-#define __OgreMdx_h__
+#ifndef __Mesh_h__
+#define __Mesh_h__
 
 #include "Prerequest.h"
-
-#if false
+#include "Vector2.h"
+#include "Vector3.h"
+#include "Vector4.h"
+#include "Matrix4x4.h"
+#include "Quaternion.h"
+#include "MyString.h"
+#include "Resource.h"
 
 NAMESPACEBEGIN(GameEngine)
 
-class CMdxMesh;
-class CRenderOperation;
-class CTexture;
+class Mesh;
+class RenderOperation;
+class Texture;
 
 typedef std::pair<size_t, size_t> MdxAnimRange;
 template <class T> T Interpolate(const float r, const T &v1, const T &v2)
@@ -18,9 +23,9 @@ template <class T> T Interpolate(const float r, const T &v1, const T &v2)
 	return static_cast<T>(v1 * (1.0f - r) + v2 * r);
 }
 
-union CMdxPointer
+union MeshPointer
 {
-	CMdxPointer(void *in);
+	MeshPointer(void *in);
 
 	void		*p;
 	byte		*byte;
@@ -28,32 +33,32 @@ union CMdxPointer
 	float		*f;
 	short		*int16;
 	char		*c;
-	DWORD		*dw;
-	WORD		*word;
-	CVector2D	*v2;
-	CVector		*v3;
-	CQuaternion *quat;
+	uint32		*dw;
+	uint16		*word;
+	Vector2	*v2;
+	Vector3		*v3;
+	Quaternion *quat;
 };
 
-class OgreExport CMemoryBlock
+class MemoryBlock
 {
 public:
-	CMemoryBlock();
-	~CMemoryBlock();
+	MemoryBlock();
+	~MemoryBlock();
 
 	BOOL Create(BYTE* pbyBuffer, int nBufferSize);
-	CMdxPointer GetPointer();
+	MeshPointer GetPointer();
 	int GetBufferSize();
 private:
 	byte*	m_pBuffer;
 	int		m_nSize;
 };
 
-class OgreExport CMdxMaterial
+class Material
 {
 public:
-	CMdxMaterial(CMdxMesh *pMdx);
-	~CMdxMaterial();
+	Material(Mesh *pMdx);
+	~Material();
 
 	enum
 	{
@@ -66,21 +71,21 @@ public:
 		MATERIAL_ALPHA_TEST = 1 << 0,
 	};
 
-	void ReadMaterial(CMdxPointer inP, int size);
+	void ReadMaterial(MeshPointer inP, int size);
 	char* GetTexName();
 	char* GetNormal();
 	char* GetSpecular();
 	int GetColorId();
-	CTexture* GetBaseTexture() { return m_pBaseTexture; }
+	Texture* GetBaseTexture() { return m_pBaseTexture; }
 	bool HasNormal() { return m_bHasNormal; }
 	bool HasSpecular() { return m_bHasSpecular; }
 	bool HasAlphaTest();
-	void SetBaseTexture(CResource *pResource);
+	void SetBaseTexture(Resource *pResource);
 private:
-	void ReadBaseInfo(CMdxPointer inP, int iSize);
+	void ReadBaseInfo(MeshPointer inP, int iSize);
 
-	CMdxMesh *m_pSrcMdx;
-	CTexture *m_pBaseTexture;
+	Mesh *m_pSrcMdx;
+	Texture *m_pBaseTexture;
 
 	char *m_pszTexName;
 	char *m_pszSpecularName;
@@ -91,69 +96,69 @@ private:
 	int m_nColorId;
 };
 
-class OgreExport CMdxMaterials
+class Materials
 {
 public:
-	CMdxMaterials(CMdxMesh *pMdx);
-	~CMdxMaterials();
+	Materials(Mesh *pMdx);
+	~Materials();
 
 	enum
 	{
 		MATERIALS_INFO = 'mtrl',
 	};
 
-	void ReadMaterials(CMdxPointer inP, int iSize);
-	CMdxMaterial* GetMaterial(int i);
+	void ReadMaterials(MeshPointer inP, int iSize);
+	Material* GetMaterial(int i);
 private:
-	void ReadMaterial(CMdxPointer inP, int iSize);
+	void ReadMaterial(MeshPointer inP, int iSize);
 
-	CMdxMesh *m_pSrcMdx;
-	typedef std::vector<CMdxMaterial*> MaterialList;
+	Mesh *m_pSrcMdx;
+	typedef std::vector<Material*> MaterialList;
 	MaterialList m_vecMaterial;
 };
 
-class OgreExport CBaseBone
+class BaseBone
 {
 public:
-	CBaseBone(CMdxMesh *pMdx);
-	~CBaseBone();
+	BaseBone(Mesh *pMdx);
+	~BaseBone();
 
-	virtual void ReadBoneInfo(CMdxPointer inP, int nSize) = 0;
+	virtual void ReadBoneInfo(MeshPointer inP, int nSize) = 0;
 	virtual void CalcBone(int nAnimID, DWORD dwTime) = 0;
 	virtual void Clear() = 0;
-	virtual CMatrix GetMatrix() = 0;
+	virtual Matrix4X4 GetMatrix() = 0;
 protected:
-	CMdxMesh *m_pSrcMdx;
+	Mesh *m_pSrcMdx;
 	int m_nParentID;
 	char *m_pszName;
 };
 
-class OgreExport CWOWBone : public CBaseBone
+class WOWBone : public BaseBone
 {
 public:
-	CWOWBone(CMdxMesh *pMdx);
-	~CWOWBone();
+	WOWBone(Mesh *pMdx);
+	~WOWBone();
 
 	enum
 	{
 		WOW_BONE_BASE_INFO = 'wowb',
 	};
 
-	virtual void ReadBoneInfo(CMdxPointer inP, int nSize);
+	virtual void ReadBoneInfo(MeshPointer inP, int nSize);
 	virtual void CalcBone(int nAnimID, DWORD dwTime);
 	virtual void Clear();
-	virtual CMatrix GetMatrix();
+	virtual Matrix4X4 GetMatrix();
 private:
-	void ReadWOWBase(CMdxPointer inP, int nSize);
-	CVector GetTrans(int nAnimID, DWORD dwTime);
-	CQuaternion GetQuat(int nAnimID, DWORD dwTime);
-	CVector GetScale(int nAnimID, DWORD dwTime);
+	void ReadWOWBase(MeshPointer inP, int nSize);
+	Vector3 GetTrans(int nAnimID, DWORD dwTime);
+	Quaternion GetQuat(int nAnimID, DWORD dwTime);
+	Vector3 GetScale(int nAnimID, DWORD dwTime);
 
 	bool m_bCalc;
 	bool m_bUseTrans;
 	bool m_bUseScale;
 	bool m_bUseQuat;
-	CMatrix m_matBone;
+	Matrix4X4 m_matBone;
 
 	int m_nTransTimeNum;
 	int m_nScaleTimeNum;
@@ -165,23 +170,23 @@ private:
 	int m_nScaleNum;
 	int m_nQuatNum;
 
-	CVector m_vPivot;
+	Vector3 m_vPivot;
 	DWORD *m_puTransTime;
 	DWORD *m_puScaleTime;
 	DWORD *m_puQuatTime;
 	MdxAnimRange *m_pTransRange;
 	MdxAnimRange *m_pScaleRange;
 	MdxAnimRange *m_pQuatRange;
-	CVector *m_pTrans;
-	CVector *m_pScale;
-	CQuaternion *m_pQuat;
+	Vector3 *m_pTrans;
+	Vector3 *m_pScale;
+	Quaternion *m_pQuat;
 };
 
-class OgreExport CMdxSkeleton
+class Skeleton
 {
 public:
-	CMdxSkeleton(CMdxMesh *pMdx);
-	~CMdxSkeleton();
+	Skeleton(Mesh *pMdx);
+	~Skeleton();
 
 	enum
 	{
@@ -190,44 +195,44 @@ public:
 		SKELETON_BONE_WOW = 'wowb',
 	};
 
-	void ReadSkeleton(CMdxPointer inP, int nSize);
+	void ReadSkeleton(MeshPointer inP, int nSize);
 	void CalcAllBone(int nAnimID, DWORD dwTime);
-	CBaseBone* GetBone(int nID);
-	CMatrix GetMatrix(int nID);
+	BaseBone* GetBone(int nID);
+	Matrix4X4 GetMatrix(int nID);
 private:
-	void ReadBone(CMdxPointer inP, int nSize);
+	void ReadBone(MeshPointer inP, int nSize);
 
-	CMdxMesh *m_pSrcMdx;
+	Mesh *m_pSrcMdx;
 	int m_nSketType;
 
-	typedef std::vector<CBaseBone*> BoneList;
+	typedef std::vector<BaseBone*> BoneList;
 	BoneList m_vecBone;
 };
 
-class OgreExport CBaseAnim
+class Animation
 {
 public:
-	CBaseAnim();
-	~CBaseAnim();
+	Animation();
+	~Animation();
 
 	enum
 	{
 		ANIM_NAME_SIZE = 50,
 	};
 
-	virtual void ReadAnim(CMdxPointer inP, int iSize) = 0;
+	virtual void ReadAnim(MeshPointer inP, int iSize) = 0;
 	char* GetName();
 protected:
 	char *m_pszName;
 };
 
-class OgreExport CWOWAnim : public CBaseAnim
+class WOWAnimation : public Animation
 {
 public:
-	CWOWAnim();
-	~CWOWAnim();
+	WOWAnimation();
+	~WOWAnimation();
 
-	virtual void ReadAnim(CMdxPointer inP, int iSize);
+	virtual void ReadAnim(MeshPointer inP, int iSize);
 	DWORD GetStartTime();
 	DWORD GetEndTime();
 private:
@@ -235,11 +240,11 @@ private:
 	DWORD m_nEndTime;
 };
 
-class OgreExport CMdxAnimSet
+class AnimationSet
 {
 public:
-	CMdxAnimSet();
-	~CMdxAnimSet();
+	AnimationSet();
+	~AnimationSet();
 
 	enum
 	{
@@ -248,27 +253,27 @@ public:
 		ANIMSET_TYPE_WOW = 1,
 	};
 
-	void ReadAnimSet(CMdxPointer inP, int iSize);
-	CBaseAnim* FindAnim(int nID);
+	void ReadAnimSet(MeshPointer inP, int iSize);
+	Animation* FindAnim(int nID);
 	int GetAnimNum();
 	int GetType();
 private:
-	void ReadAnim(CMdxPointer inP, int iSize);
+	void ReadAnim(MeshPointer inP, int iSize);
 
 	int m_nAnimType;
-	typedef std::vector<CBaseAnim*> AnimList;
-	typedef std::map<char*, CBaseAnim*> AnimMap;
-	typedef std::map<int, CBaseAnim*> AnimIDMap;
+	typedef std::vector<Animation*> AnimList;
+	typedef std::map<char*, Animation*> AnimMap;
+	typedef std::map<int, Animation*> AnimIDMap;
 	AnimList m_vecAnim;
 	AnimMap m_mapAnim;
 	AnimIDMap m_mapAnimID;
 };
 
-class OgreExport CMdxGeoChunk
+class GeoChunk
 {
 public:
-	CMdxGeoChunk(int id, CMdxMesh *pMdx);
-	~CMdxGeoChunk();
+	GeoChunk(int id, Mesh *pMdx);
+	~GeoChunk();
 
 	enum
 	{
@@ -277,34 +282,34 @@ public:
 		CHUNK_BONE_INFO = 'bone',
 	};
 
-	void ReadChunk(CMdxPointer inP, int size);
+	void ReadChunk(MeshPointer inP, int size);
 	int GetVertexNum();
 	int GetIndexNum();
 	int GetMaterialId();
-	CVector* GetVertices();
-	CVector* GetNormals();
-	CVector2D* GetUVs();
+	Vector3* GetVertices();
+	Vector3* GetNormals();
+	Vector2* GetUVs();
 	WORD* GetIndices();
 	byte* GetBoneWeight();
 	byte* GetBoneIndex();
 	bool HasBoneInfo();
-	CRenderOperation* GetRenderOp() { return m_pRenderOp; }
+	RenderOperation* GetRenderOp() { return m_pRenderOp; }
 private:
-	void ReadBaseInfo(CMdxPointer inP, int size);
-	void ReadBoneInfo(CMdxPointer inP, int size);
+	void ReadBaseInfo(MeshPointer inP, int size);
+	void ReadBoneInfo(MeshPointer inP, int size);
 
-	CRenderOperation *m_pRenderOp;
+	RenderOperation *m_pRenderOp;
 
-	CMdxMesh *m_pSrcMdx;
+	Mesh *m_pSrcMdx;
 	int m_nChunkID;
 	int m_nMaterialId;
 
 	char *m_pszName;
 	int m_nVertexNum;
 	int m_nIndexNum;
-	CVector *m_pVertices;
-	CVector *m_pNormals;
-	CVector2D *m_pUVs;
+	Vector3 *m_pVertices;
+	Vector3 *m_pNormals;
+	Vector2 *m_pUVs;
 	DWORD *m_pDiffuse;
 	WORD *m_pIndices;
 	DWORD *m_pLIndices;
@@ -315,43 +320,43 @@ private:
 	bool m_bHasBoneInfo;
 };
 
-class OgreExport CMdxGeometry
+class Geometry
 {
 public:
-	CMdxGeometry(CMdxMesh *pMdx);
-	~CMdxGeometry();
+	Geometry(Mesh *pMdx);
+	~Geometry();
 
 	enum
 	{
 		GEOMETRY_CHUNK = 'chks',
 	};
 
-	void ReadGeometry(CMdxPointer inP, int size);
-	CMdxGeoChunk* GetChunk(int id);
+	void ReadGeometry(MeshPointer inP, int size);
+	GeoChunk* GetChunk(int id);
 	int GetChunkNum();
 private:
-	void ReadChunk(CMdxPointer inP, int size);
+	void ReadChunk(MeshPointer inP, int size);
 
-	CMdxMesh *m_pSrcMdx;
-	typedef std::vector<CMdxGeoChunk*> ChunkList;
+	Mesh *m_pSrcMdx;
+	typedef std::vector<GeoChunk*> ChunkList;
 	ChunkList m_vecChunk;
 };
 
-class OgreExport CWOWColorGroup
+class WOWColorGroup
 {
 public:
-	CWOWColorGroup(CMdxMesh *pMdx);
-	~CWOWColorGroup();
+	WOWColorGroup(Mesh *pMdx);
+	~WOWColorGroup();
 
 	enum
 	{
 		WOWCOLOR_COLOR = 'colr',
 	};
 
-	struct CWOWColor
+	struct WOWColor
 	{
-		CWOWColor();
-		~CWOWColor();
+		WOWColor();
+		~WOWColor();
 
 		int nOpacityTimeNum;
 		int nOpacityRangeNum;
@@ -361,27 +366,27 @@ public:
 		float *pOpacity;
 	};
 
-	void ReadWOWColor(CMdxPointer inP, int size);
+	void ReadWOWColor(MeshPointer inP, int size);
 	float GetColor(int nID, int nAnimId);
 private:
-	CMdxMesh *m_pSrcMdx;
+	Mesh *m_pSrcMdx;
 
-	typedef std::vector<CWOWColor*> ColorList;
+	typedef std::vector<WOWColor*> ColorList;
 	ColorList m_vecColor;
 };
 
-struct CMdxMeshFormat
+struct MeshFormat
 {
-	CVector vPos;
-	CVector vNormal;
-	CVector2D vTex;
+	Vector3 vPos;
+	Vector3 vNormal;
+	Vector2 vTex;
 };
 
-class OgreExport CMdxMesh : public CResource
+class Mesh : public Resource
 {
 public:
-	CMdxMesh(CString szGroup, CString szName);
-	~CMdxMesh();
+	Mesh(String szGroup, String szName);
+	~Mesh();
 
 	enum
 	{
@@ -396,37 +401,35 @@ public:
 
 	void UpdateSkeleton(int nAnimID, bool bSingleFrame, int nFrame);
 	int GetFrame() { return m_nFrame; }
-	CMdxGeometry* GetGeometry() { return m_pGeometry; }
-	CMdxMaterials* GetMaterials() { return m_pMaterials; }
-	CMdxSkeleton* GetSkeleton() { return m_pSkeleton; }
-	CMdxAnimSet* GetAnimSet() { return m_pAnimSet; }
-	CWOWColorGroup* GetWOWColorGroup() { return m_pWOWColorGroup; }
+	Geometry* GetGeometry() { return m_pGeometry; }
+	Materials* GetMaterials() { return m_pMaterials; }
+	Skeleton* GetSkeleton() { return m_pSkeleton; }
+	AnimationSet* GetAnimSet() { return m_pAnimSet; }
+	WOWColorGroup* GetWOWColorGroup() { return m_pWOWColorGroup; }
 	DWORD GetCurAnimStartTime(int nAnimId);
 	DWORD GetCurAnimEndTime(int nAnimId);
 private:
 	bool LoadFromMdxFile(BYTE* pbyBuffer, int nBufferSize);
 	bool LoadFromSketFile(byte *pbyBuffer, int nBufSize);
-	void ReadGeometry(CMdxPointer inP, int size);
-	void ReadMaterials(CMdxPointer inP, int iSize);
-	void ReadWOWColor(CMdxPointer inP, int iSize);
-	void ReadSkeleton(CMdxPointer inP, int iSize);
-	void ReadAnimSet(CMdxPointer inP, int iSize);
+	void ReadGeometry(MeshPointer inP, int size);
+	void ReadMaterials(MeshPointer inP, int iSize);
+	void ReadWOWColor(MeshPointer inP, int iSize);
+	void ReadSkeleton(MeshPointer inP, int iSize);
+	void ReadAnimSet(MeshPointer inP, int iSize);
 
 	int m_nFrame;
-	CMemoryBlock m_GeometryMB;
-	CMdxGeometry *m_pGeometry;
-	CMemoryBlock m_MaterialsMB;
-	CMdxMaterials *m_pMaterials;
-	CMemoryBlock m_SkeletonMB;
-	CMdxSkeleton *m_pSkeleton;
-	CMemoryBlock m_AnimSetMB;
-	CMdxAnimSet *m_pAnimSet;
-	CMemoryBlock m_WOWColorMB;
-	CWOWColorGroup *m_pWOWColorGroup;
+	MemoryBlock m_GeometryMB;
+	Geometry *m_pGeometry;
+	MemoryBlock m_MaterialsMB;
+	Materials *m_pMaterials;
+	MemoryBlock m_SkeletonMB;
+	Skeleton *m_pSkeleton;
+	MemoryBlock m_AnimSetMB;
+	AnimationSet *m_pAnimSet;
+	MemoryBlock m_WOWColorMB;
+	WOWColorGroup *m_pWOWColorGroup;
 };
 
 NAMESPACEEND
-
-#endif
 
 #endif

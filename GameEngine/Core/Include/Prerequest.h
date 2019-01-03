@@ -19,6 +19,14 @@ typedef unsigned __int64 uint64;
 #define SAFE_DELETE(p) {if(p){delete p; p = NULL;}}
 #define SAFE_RELEASE(p) {if(p){p->Release(); p = NULL;}}
 
+#define MDX_TAG(x) (DWORD)( (((DWORD)x&0x0000ff00)<<8) + (((DWORD)x&0x000000ff)<<24) + \
+		(((DWORD)x&0x00ff0000)>>8) + (((DWORD)x&0xff000000)>>24) )
+
+#define DC_TAG(x)  (DWORD)( (((DWORD)x&0x0000ff00)<<8) + (((DWORD)x&0x000000ff)<<24) + (((DWORD)x&0x00ff0000)>>8) + (((DWORD)x&0xff000000)>>24) )
+
+#define FRAMEPERSEC 30.0f
+#define ONEFRAMEINTERVAL (1000.0f / FRAMEPERSEC)
+
 #ifndef max
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
@@ -43,7 +51,11 @@ typedef unsigned __int64 uint64;
 #include <math.h>
 #include <fstream>
 #include <sstream>
-
 using namespace std;
+
+inline DWORD HQ_TimeGetTime()
+{
+	return timeGetTime();
+}
 
 #endif

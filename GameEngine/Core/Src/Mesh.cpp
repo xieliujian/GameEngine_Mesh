@@ -1,29 +1,30 @@
 
 
 #include "Mesh.h"
-
-#if false
+#include "ResourceManager.h"
+#include "RenderPass.h"
+#include "HardwareBuffer.h"
 
 NAMESPACEBEGIN(GameEngine)
 
 //-----------------------------------
 //-----------CMSMdxPointer-------------
 //-----------------------------------
-CMdxPointer::CMdxPointer(void* in) 
+MeshPointer::MeshPointer(void* in) 
 {
 	p = in;
 }
 
 //-----------------------------------
-//-----------CMemoryBlock------------
+//-----------MemoryBlock------------
 //-----------------------------------
-CMemoryBlock::CMemoryBlock()
+MemoryBlock::MemoryBlock()
 {
 	m_pBuffer = NULL;
 	m_nSize = 0;
 }
 
-CMemoryBlock::~CMemoryBlock()
+MemoryBlock::~MemoryBlock()
 {
 	if( m_pBuffer )
 	{
@@ -34,7 +35,7 @@ CMemoryBlock::~CMemoryBlock()
 	m_nSize = 0;
 }
 
-BOOL CMemoryBlock::Create( BYTE* pbyBuffer, int nBufferSize )
+BOOL MemoryBlock::Create( BYTE* pbyBuffer, int nBufferSize )
 {
 	if( pbyBuffer == NULL || nBufferSize == 0 )
 	{
@@ -49,21 +50,21 @@ BOOL CMemoryBlock::Create( BYTE* pbyBuffer, int nBufferSize )
 	return TRUE;
 }
 
-CMdxPointer CMemoryBlock::GetPointer()
+MeshPointer MemoryBlock::GetPointer()
 {
-	CMdxPointer p( m_pBuffer );
+	MeshPointer p( m_pBuffer );
 	return p;
 }
 
-int CMemoryBlock::GetBufferSize()
+int MemoryBlock::GetBufferSize()
 { 
 	return m_nSize;
 }
 
 //--------------------------------
-//---------CMdxMaterial-----------
+//---------Material-----------
 //--------------------------------
-CMdxMaterial::CMdxMaterial(CMdxMesh *pMdx)
+Material::Material(Mesh *pMdx)
 {
 	m_pSrcMdx = pMdx;
 	m_bHasSpecular = false;
@@ -76,14 +77,14 @@ CMdxMaterial::CMdxMaterial(CMdxMesh *pMdx)
 	m_pBaseTexture = NULL;
 }
 
-CMdxMaterial::~CMdxMaterial()
+Material::~Material()
 {
 
 }
 
-void CMdxMaterial::ReadBaseInfo(CMdxPointer inP, int iSize)
+void Material::ReadBaseInfo(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_pszTexName = p.c;
 	p.c += MATERIAL_NAME_SIZE;
@@ -106,39 +107,39 @@ void CMdxMaterial::ReadBaseInfo(CMdxPointer inP, int iSize)
 	m_nColorId = *p.i++;
 }
 
-char* CMdxMaterial::GetTexName()
+char* Material::GetTexName()
 {
 	return m_pszTexName;
 }
 
-char* CMdxMaterial::GetNormal()
+char* Material::GetNormal()
 {
 	return m_pszNormalName;
 }
 
-char* CMdxMaterial::GetSpecular()
+char* Material::GetSpecular()
 {
 	return m_pszSpecularName;
 }
 
-int CMdxMaterial::GetColorId()
+int Material::GetColorId()
 {
 	return m_nColorId;
 }
 
-bool CMdxMaterial::HasAlphaTest()
+bool Material::HasAlphaTest()
 {
 	return (m_dwRenderFlag & MATERIAL_ALPHA_TEST);
 }
 
-void CMdxMaterial::SetBaseTexture(CResource *pResource)
+void Material::SetBaseTexture(Resource *pResource)
 {
-	m_pBaseTexture = (CTexture*)pResource;
+	m_pBaseTexture = (Texture*)pResource;
 }
 
-void CMdxMaterial::ReadMaterial(CMdxPointer inP, int iSize)
+void Material::ReadMaterial(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	while(p.c < inP.c + iSize)
 	{
@@ -164,19 +165,19 @@ void CMdxMaterial::ReadMaterial(CMdxPointer inP, int iSize)
 }
 
 //--------------------------------
-//---------CMdxMaterials----------
+//---------Materials----------
 //--------------------------------
-CMdxMaterials::CMdxMaterials(CMdxMesh *pMdx)
+Materials::Materials(Mesh *pMdx)
 {
 	m_pSrcMdx = pMdx;
 }
 
-CMdxMaterials::~CMdxMaterials()
+Materials::~Materials()
 {
 
 }
 
-CMdxMaterial* CMdxMaterials::GetMaterial(int i)
+Material* Materials::GetMaterial(int i)
 {
 	int size = m_vecMaterial.size();
 	if (i < 0 || i > size - 1)
@@ -187,9 +188,9 @@ CMdxMaterial* CMdxMaterials::GetMaterial(int i)
 	return m_vecMaterial[i];
 }
 
-void CMdxMaterials::ReadMaterials(CMdxPointer inP, int iSize)
+void Materials::ReadMaterials(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	while (p.c < inP.c + iSize)
 	{
@@ -214,9 +215,9 @@ void CMdxMaterials::ReadMaterials(CMdxPointer inP, int iSize)
 	}
 }
 
-void CMdxMaterials::ReadMaterial(CMdxPointer inP, int iSize)
+void Materials::ReadMaterial(MeshPointer inP, int iSize)
 {
-	CMdxMaterial *pMaterial = new CMdxMaterial(m_pSrcMdx);
+	Material *pMaterial = new Material(m_pSrcMdx);
 	if (pMaterial)
 	{
 		pMaterial->ReadMaterial(inP, iSize);
@@ -227,22 +228,22 @@ void CMdxMaterials::ReadMaterial(CMdxPointer inP, int iSize)
 //--------------------------------
 //------------CMdxBone------------
 //--------------------------------
-CBaseBone::CBaseBone(CMdxMesh *pMdx)
+BaseBone::BaseBone(Mesh *pMdx)
 {
 	m_pSrcMdx = pMdx;
 	m_nParentID = -1;
 	m_pszName = NULL;
 }
 
-CBaseBone::~CBaseBone()
+BaseBone::~BaseBone()
 {
 }
 
 //--------------------------------
-//-------------CWOWBone-----------
+//-------------WOWBone-----------
 //--------------------------------
-CWOWBone::CWOWBone(CMdxMesh *pMdx)
-	:CBaseBone(pMdx)
+WOWBone::WOWBone(Mesh *pMdx)
+	:BaseBone(pMdx)
 {
 	m_bCalc = false;
 	m_bUseTrans = false;
@@ -270,13 +271,13 @@ CWOWBone::CWOWBone(CMdxMesh *pMdx)
 	m_pQuat = NULL;
 }
 
-CWOWBone::~CWOWBone()
+WOWBone::~WOWBone()
 {
 }
 
-void CWOWBone::ReadBoneInfo(CMdxPointer inP, int nSize)
+void WOWBone::ReadBoneInfo(MeshPointer inP, int nSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	while (p.c < inP.c + nSize)
 	{
@@ -301,9 +302,9 @@ void CWOWBone::ReadBoneInfo(CMdxPointer inP, int nSize)
 	}
 }
 
-void CWOWBone::ReadWOWBase(CMdxPointer inP, int nSize)
+void WOWBone::ReadWOWBase(MeshPointer inP, int nSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 		
 	m_nParentID = *p.i++;
 	m_bUseTrans = *p.i++;
@@ -375,21 +376,21 @@ void CWOWBone::ReadWOWBase(CMdxPointer inP, int nSize)
 	}
 }
 
-void CWOWBone::Clear()
+void WOWBone::Clear()
 {
 	m_bCalc = false;
 }
 
-CMatrix CWOWBone::GetMatrix()
+Matrix4X4 WOWBone::GetMatrix()
 {
 	return m_matBone;
 }
 
-CVector CWOWBone::GetTrans(int nAnimID, DWORD dwTime)
+Vector3 WOWBone::GetTrans(int nAnimID, DWORD dwTime)
 {
 	if (m_nTransNum == 0)
 	{
-		return CVector(0.0f, 0.0f, 0.0f);
+		return Vector3(0.0f, 0.0f, 0.0f);
 	}
 
 	if (m_nTransNum == 1)
@@ -399,7 +400,7 @@ CVector CWOWBone::GetTrans(int nAnimID, DWORD dwTime)
 
 	if (m_nTransRangeNum == 0)
 	{
-		return CVector(0.0f, 0.0f, 0.0f);
+		return Vector3(0.0f, 0.0f, 0.0f);
 	}
 
 	MdxAnimRange range = m_pTransRange[nAnimID];
@@ -419,19 +420,19 @@ CVector CWOWBone::GetTrans(int nAnimID, DWORD dwTime)
 		t1 = m_puTransTime[pos];
 		t2 = m_puTransTime[pos + 1];
 		float r = (dwTime - t1) / (float)(t2 - t1);
-		CVector v1 = m_pTrans[pos];
-		CVector v2 = m_pTrans[pos + 1];
+		Vector3 v1 = m_pTrans[pos];
+		Vector3 v2 = m_pTrans[pos + 1];
 		return Interpolate(r, v1, v2);
 	}
 
-	return CVector(0.0f, 0.0f, 0.0f);
+	return Vector3(0.0f, 0.0f, 0.0f);
 }
 
-CQuaternion CWOWBone::GetQuat(int nAnimID, DWORD dwTime)
+Quaternion WOWBone::GetQuat(int nAnimID, DWORD dwTime)
 {
 	if (m_nQuatNum == 0)
 	{
-		return CQuaternion(0.0f, 0.0f, 0.0f, 1.0f);
+		return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 
 	if (m_nQuatNum == 1)
@@ -441,7 +442,7 @@ CQuaternion CWOWBone::GetQuat(int nAnimID, DWORD dwTime)
 
 	if (m_nQuatRangeNum == 0)
 	{
-		return CQuaternion(0.0f, 0.0f, 0.0f, 1.0f);
+		return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 
 	MdxAnimRange range = m_pQuatRange[nAnimID];
@@ -462,19 +463,19 @@ CQuaternion CWOWBone::GetQuat(int nAnimID, DWORD dwTime)
 		t2 = m_puQuatTime[pos + 1];
 
 		float r = (dwTime - t1) / (float)(t2 - t1);
-		CQuaternion v1 = m_pQuat[pos];
-		CQuaternion v2 = m_pQuat[pos + 1];
+		Quaternion v1 = m_pQuat[pos];
+		Quaternion v2 = m_pQuat[pos + 1];
 		return Interpolate(r, v1, v2);
 	}
 
-	return CQuaternion(0.0f, 0.0f, 0.0f, 1.0f);
+	return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-CVector CWOWBone::GetScale(int nAnimID, DWORD dwTime)
+Vector3 WOWBone::GetScale(int nAnimID, DWORD dwTime)
 {
 	if (m_nScaleNum == 0)
 	{
-		return CVector(1.0f, 1.0f, 1.0f);
+		return Vector3(1.0f, 1.0f, 1.0f);
 	}
 
 	if (m_nScaleNum == 1)
@@ -484,7 +485,7 @@ CVector CWOWBone::GetScale(int nAnimID, DWORD dwTime)
 
 	if (m_nScaleRangeNum == 0)
 	{
-		return CVector(1.0f, 1.0f, 1.0f);
+		return Vector3(1.0f, 1.0f, 1.0f);
 	}
 
 	MdxAnimRange range = m_pScaleRange[nAnimID];
@@ -504,22 +505,22 @@ CVector CWOWBone::GetScale(int nAnimID, DWORD dwTime)
 		t1 = m_puScaleTime[pos];
 		t2 = m_puScaleTime[pos + 1];
 		float r = (dwTime - t1) / (float)(t2 - t1);
-		CVector v1 = m_pScale[pos];
-		CVector v2 = m_pScale[pos + 1];
+		Vector3 v1 = m_pScale[pos];
+		Vector3 v2 = m_pScale[pos + 1];
 		return Interpolate(r, v1, v2);
 	}
 
-	return CVector(1.0f, 1.0f, 1.0f);
+	return Vector3(1.0f, 1.0f, 1.0f);
 }
 
-void CWOWBone::CalcBone(int nAnimID, DWORD dwTime)
+void WOWBone::CalcBone(int nAnimID, DWORD dwTime)
 {
 	if (m_bCalc)
 	{
 		return;
 	}
 
-	CMatrix m;
+	Matrix4X4 m;
 	bool bUse = m_bUseTrans || m_bUseScale || m_bUseQuat;
 	if (bUse)
 	{
@@ -527,23 +528,23 @@ void CWOWBone::CalcBone(int nAnimID, DWORD dwTime)
 
 		if (m_bUseTrans) 
 		{
-			Ogre::CVector tr = GetTrans(nAnimID, dwTime);
-			m *= Ogre::CMatrix::NewTranslation(tr);
+			Vector3 tr = GetTrans(nAnimID, dwTime);
+			m *= Matrix4X4::NewTranslation(tr);
 		}
 
 		if (m_bUseQuat) 
 		{
-			Ogre::CQuaternion q = GetQuat(nAnimID, dwTime);
-			m *= Ogre::CMatrix::NewQuatRotate(q);
+			Quaternion q = GetQuat(nAnimID, dwTime);
+			m *= Matrix4X4::NewQuatRotate(q);
 		}
 
 		if (m_bUseScale)
 		{
-			Ogre::CVector sc = GetScale(nAnimID, dwTime);
-			m *= Ogre::CMatrix::NewScale(sc);
+			Vector3 sc = GetScale(nAnimID, dwTime);
+			m *= Matrix4X4::NewScale(sc);
 		}
 
-		m *= Ogre::CMatrix::NewTranslation(m_vPivot * -1.0f);
+		m *= Matrix4X4::NewTranslation(m_vPivot * -1.0f);
 	}
 	else
 	{
@@ -552,7 +553,7 @@ void CWOWBone::CalcBone(int nAnimID, DWORD dwTime)
 
 	if (m_nParentID > -1) 
 	{
-		CBaseBone *pBone = m_pSrcMdx->GetSkeleton()->GetBone(m_nParentID);
+		BaseBone *pBone = m_pSrcMdx->GetSkeleton()->GetBone(m_nParentID);
 		if (pBone)
 		{
 			pBone->CalcBone(nAnimID, dwTime);
@@ -572,22 +573,22 @@ void CWOWBone::CalcBone(int nAnimID, DWORD dwTime)
 }
 
 //--------------------------------
-//----------CMdxSkeleton----------
+//----------Skeleton----------
 //--------------------------------
-CMdxSkeleton::CMdxSkeleton(CMdxMesh *pMdx)
+Skeleton::Skeleton(Mesh *pMdx)
 {
 	m_pSrcMdx = pMdx;
 	m_nSketType = SKELETONTYPE_NONE;
 }
 
-CMdxSkeleton::~CMdxSkeleton()
+Skeleton::~Skeleton()
 {
 
 }
 
-void CMdxSkeleton::ReadSkeleton(CMdxPointer inP, int nSize)
+void Skeleton::ReadSkeleton(MeshPointer inP, int nSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_nSketType = *p.i++;
 
@@ -614,14 +615,14 @@ void CMdxSkeleton::ReadSkeleton(CMdxPointer inP, int nSize)
 	}
 }
 
-void CMdxSkeleton::ReadBone(CMdxPointer inP, int nSize)
+void Skeleton::ReadBone(MeshPointer inP, int nSize)
 {
-	CBaseBone *pBone = NULL;
+	BaseBone *pBone = NULL;
 	switch(m_nSketType)
 	{
 	case SKELETONTYPE_WOW:
 		{
-			pBone = new CWOWBone(m_pSrcMdx);
+			pBone = new WOWBone(m_pSrcMdx);
 		}
 		break;
 	default:
@@ -635,7 +636,7 @@ void CMdxSkeleton::ReadBone(CMdxPointer inP, int nSize)
 	}
 }
 
-CBaseBone* CMdxSkeleton::GetBone(int nID)
+BaseBone* Skeleton::GetBone(int nID)
 {
 	int nNum = m_vecBone.size();
 	if (nID < 0 || nID > nNum - 1)
@@ -646,12 +647,12 @@ CBaseBone* CMdxSkeleton::GetBone(int nID)
 	return m_vecBone[nID];
 }
 
-CMatrix CMdxSkeleton::GetMatrix(int nID)
+Matrix4X4 Skeleton::GetMatrix(int nID)
 {
-	CMatrix mat;
+	Matrix4X4 mat;
 	mat.Unit();
 
-	CBaseBone *pBone = GetBone(nID);
+	BaseBone *pBone = GetBone(nID);
 	if (pBone)
 	{
 		mat = pBone->GetMatrix();
@@ -660,12 +661,12 @@ CMatrix CMdxSkeleton::GetMatrix(int nID)
 	return mat;
 }
 
-void CMdxSkeleton::CalcAllBone(int nAnimID, DWORD dwTime)
+void Skeleton::CalcAllBone(int nAnimID, DWORD dwTime)
 {
 	int nNum = m_vecBone.size();
 	for (int i = 0; i < nNum; i++)
 	{
-		CBaseBone *pBone = m_vecBone[i];
+		BaseBone *pBone = m_vecBone[i];
 		if (pBone)
 		{
 			pBone->Clear();
@@ -674,7 +675,7 @@ void CMdxSkeleton::CalcAllBone(int nAnimID, DWORD dwTime)
 
 	for (int i = 0; i < nNum; i++)
 	{
-		CBaseBone *pBone = m_vecBone[i];
+		BaseBone *pBone = m_vecBone[i];
 		if (pBone)
 		{
 			pBone->CalcBone(nAnimID, dwTime);
@@ -683,9 +684,9 @@ void CMdxSkeleton::CalcAllBone(int nAnimID, DWORD dwTime)
 }
 
 //--------------------------------
-//---------CMdxGeoChunk-----------
+//---------GeoChunk-----------
 //--------------------------------
-CMdxGeoChunk::CMdxGeoChunk(int id, CMdxMesh *pMdx)
+GeoChunk::GeoChunk(int id, Mesh *pMdx)
 {
 	m_pSrcMdx = pMdx;
 	m_nChunkID = id;
@@ -705,67 +706,67 @@ CMdxGeoChunk::CMdxGeoChunk(int id, CMdxMesh *pMdx)
 
 	m_bUseLIndex = false;
 	m_bHasBoneInfo = false;
-	m_pRenderOp = new CRenderOperation;
+	m_pRenderOp = new RenderOperation;
 }
 
-CMdxGeoChunk::~CMdxGeoChunk()
+GeoChunk::~GeoChunk()
 {
 
 }
 
-int CMdxGeoChunk::GetVertexNum()
+int GeoChunk::GetVertexNum()
 {
 	return m_nVertexNum;
 }
 
-int CMdxGeoChunk::GetIndexNum()
+int GeoChunk::GetIndexNum()
 {
 	return m_nIndexNum;
 }
 
-int CMdxGeoChunk::GetMaterialId()
+int GeoChunk::GetMaterialId()
 {
 	return m_nMaterialId;
 }
 
-CVector* CMdxGeoChunk::GetVertices()
+Vector3* GeoChunk::GetVertices()
 {
 	return m_pVertices;
 }
 
-CVector* CMdxGeoChunk::GetNormals()
+Vector3* GeoChunk::GetNormals()
 {
 	return m_pNormals;
 }
 
-CVector2D* CMdxGeoChunk::GetUVs()
+Vector2* GeoChunk::GetUVs()
 {
 	return m_pUVs;
 }
 
-WORD* CMdxGeoChunk::GetIndices()
+WORD* GeoChunk::GetIndices()
 {
 	return m_pIndices;
 }
 
-byte* CMdxGeoChunk::GetBoneWeight()
+byte* GeoChunk::GetBoneWeight()
 {
 	return m_pBoneWeight;
 }
 
-byte* CMdxGeoChunk::GetBoneIndex()
+byte* GeoChunk::GetBoneIndex()
 {
 	return m_pBoneIndex;
 }
 
-bool CMdxGeoChunk::HasBoneInfo()
+bool GeoChunk::HasBoneInfo()
 {
 	return m_bHasBoneInfo;
 }
 
-void CMdxGeoChunk::ReadChunk(CMdxPointer inP, int size)
+void GeoChunk::ReadChunk(MeshPointer inP, int size)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	while (p.c < inP.c + size)
 	{
@@ -798,9 +799,9 @@ void CMdxGeoChunk::ReadChunk(CMdxPointer inP, int size)
 	}
 }
 
-void CMdxGeoChunk::ReadBoneInfo(CMdxPointer inP, int size)
+void GeoChunk::ReadBoneInfo(MeshPointer inP, int size)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_pBoneWeight = p.byte;
 	p.byte += m_nVertexNum * 4;
@@ -811,9 +812,9 @@ void CMdxGeoChunk::ReadBoneInfo(CMdxPointer inP, int size)
 	m_bHasBoneInfo = true;
 }
 
-void CMdxGeoChunk::ReadBaseInfo(CMdxPointer inP, int size)
+void GeoChunk::ReadBaseInfo(MeshPointer inP, int size)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_pszName = p.c;
 	p.c += CHUNK_NAME_SIZE;
@@ -846,21 +847,21 @@ void CMdxGeoChunk::ReadBaseInfo(CMdxPointer inP, int size)
 }
 
 //--------------------------------
-//---------CMdxGeometry-----------
+//---------Geometry-----------
 //--------------------------------
-CMdxGeometry::CMdxGeometry(CMdxMesh *pMdx)
+Geometry::Geometry(Mesh *pMdx)
 {
 	m_pSrcMdx = pMdx;
 }
 
-CMdxGeometry::~CMdxGeometry()
+Geometry::~Geometry()
 {
 
 }
 
-void CMdxGeometry::ReadGeometry(CMdxPointer inP, int size)
+void Geometry::ReadGeometry(MeshPointer inP, int size)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	while(p.c < inP.c + size)
 	{
@@ -885,7 +886,7 @@ void CMdxGeometry::ReadGeometry(CMdxPointer inP, int size)
 	}
 }
 
-CMdxGeoChunk* CMdxGeometry::GetChunk(int id)
+GeoChunk* Geometry::GetChunk(int id)
 {
 	int nSize = m_vecChunk.size();
 	if (id < 0 || id > nSize - 1)
@@ -896,16 +897,16 @@ CMdxGeoChunk* CMdxGeometry::GetChunk(int id)
 	return m_vecChunk[id];
 }
 
-int CMdxGeometry::GetChunkNum()
+int Geometry::GetChunkNum()
 {
 	int nSize = m_vecChunk.size();
 	return nSize;
 }
 
-void CMdxGeometry::ReadChunk(CMdxPointer inP, int size)
+void Geometry::ReadChunk(MeshPointer inP, int size)
 {
 	int nID = m_vecChunk.size();
-	CMdxGeoChunk *pChunk = new CMdxGeoChunk(nID, m_pSrcMdx);
+	GeoChunk *pChunk = new GeoChunk(nID, m_pSrcMdx);
 	if (pChunk)
 	{
 		pChunk->ReadChunk(inP, size);
@@ -914,39 +915,39 @@ void CMdxGeometry::ReadChunk(CMdxPointer inP, int size)
 }
 
 //--------------------------------
-//-----------CBaseAnim------------
+//-----------Animation------------
 //--------------------------------
-CBaseAnim::CBaseAnim()
+Animation::Animation()
 {
 	m_pszName = NULL;
 }
 
-CBaseAnim::~CBaseAnim()
+Animation::~Animation()
 {
 
 }
 
-char* CBaseAnim::GetName()
+char* Animation::GetName()
 {
 	return m_pszName;
 }
 
 //--------------------------------
-//------------CWOWAnim------------
+//------------WOWAnimation------------
 //--------------------------------
-CWOWAnim::CWOWAnim()
+WOWAnimation::WOWAnimation()
 {
 
 }
 
-CWOWAnim::~CWOWAnim()
+WOWAnimation::~WOWAnimation()
 {
 
 }
 
-void CWOWAnim::ReadAnim(CMdxPointer inP, int iSize)
+void WOWAnimation::ReadAnim(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 	m_pszName = p.c;
 	p.c += ANIM_NAME_SIZE;
 
@@ -954,32 +955,32 @@ void CWOWAnim::ReadAnim(CMdxPointer inP, int iSize)
 	m_nEndTime = *p.dw++;
 }
 
-DWORD CWOWAnim::GetStartTime()
+DWORD WOWAnimation::GetStartTime()
 {
 	return m_nStartTime;
 }
 
-DWORD CWOWAnim::GetEndTime()
+DWORD WOWAnimation::GetEndTime()
 {
 	return m_nEndTime;
 }
 
 //--------------------------------
-//----------CMdxAnimSet-----------
+//----------AnimationSet-----------
 //--------------------------------
-CMdxAnimSet::CMdxAnimSet()
+AnimationSet::AnimationSet()
 {
 	m_nAnimType = ANIMSET_TYPE_NONE;
 }
 
-CMdxAnimSet::~CMdxAnimSet()
+AnimationSet::~AnimationSet()
 {
 
 }
 
-void CMdxAnimSet::ReadAnimSet(CMdxPointer inP, int iSize)
+void AnimationSet::ReadAnimSet(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_nAnimType = *p.i++;
 
@@ -1006,9 +1007,9 @@ void CMdxAnimSet::ReadAnimSet(CMdxPointer inP, int iSize)
 	}
 }
 
-void CMdxAnimSet::ReadAnim(CMdxPointer inP, int iSize)
+void AnimationSet::ReadAnim(MeshPointer inP, int iSize)
 {
-	CBaseAnim *pAnim = new CWOWAnim;
+	Animation *pAnim = new WOWAnimation;
 	if (pAnim)
 	{
 		pAnim->ReadAnim(inP.p, iSize);
@@ -1018,7 +1019,7 @@ void CMdxAnimSet::ReadAnim(CMdxPointer inP, int iSize)
 	}
 }
 
-CBaseAnim* CMdxAnimSet::FindAnim(int nID)
+Animation* AnimationSet::FindAnim(int nID)
 {
 	AnimIDMap::iterator iter = m_mapAnimID.find(nID);
 	if (iter != m_mapAnimID.end())
@@ -1029,30 +1030,30 @@ CBaseAnim* CMdxAnimSet::FindAnim(int nID)
 	return NULL;
 }
 
-int CMdxAnimSet::GetAnimNum()
+int AnimationSet::GetAnimNum()
 {
 	return m_vecAnim.size();
 }
 
-int CMdxAnimSet::GetType()
+int AnimationSet::GetType()
 {
 	return m_nAnimType;
 }
 
 //--------------------------------
-//--------CWOWColorGroup----------
+//--------WOWColorGroup----------
 //--------------------------------
-CWOWColorGroup::CWOWColorGroup(CMdxMesh *pMdx)
+WOWColorGroup::WOWColorGroup(Mesh *pMdx)
 {
 	m_pSrcMdx = pMdx;
 }
 
-CWOWColorGroup::~CWOWColorGroup()
+WOWColorGroup::~WOWColorGroup()
 {
 
 }
 
-CWOWColorGroup::CWOWColor::CWOWColor()
+WOWColorGroup::WOWColor::WOWColor()
 {
 	nOpacityTimeNum = 0;
 	nOpacityRangeNum = 0;
@@ -1062,14 +1063,14 @@ CWOWColorGroup::CWOWColor::CWOWColor()
 	pOpacity = NULL;
 }
 
-CWOWColorGroup::CWOWColor::~CWOWColor()
+WOWColorGroup::WOWColor::~WOWColor()
 {
 
 }
 
-void CWOWColorGroup::ReadWOWColor(CMdxPointer inP, int iSize)
+void WOWColorGroup::ReadWOWColor(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	while (p.c < inP.c + iSize)
 	{
@@ -1080,9 +1081,9 @@ void CWOWColorGroup::ReadWOWColor(CMdxPointer inP, int iSize)
 				p.dw++;
 				int size = *p.i++;
 
-				CMdxPointer s(p.p);
+				MeshPointer s(p.p);
 				{
-					CWOWColor *pColor = new CWOWColor;
+					WOWColor *pColor = new WOWColor;
 					pColor->nOpacityTimeNum = *s.i++;
 					pColor->nOpacityRangeNum = *s.i++;
 					pColor->nOpacityNum = *s.i++;
@@ -1122,14 +1123,14 @@ void CWOWColorGroup::ReadWOWColor(CMdxPointer inP, int iSize)
 	}
 }
 
-float CWOWColorGroup::GetColor(int nID, int nAnimId)
+float WOWColorGroup::GetColor(int nID, int nAnimId)
 {
 	if (nID < 0 || nID > m_vecColor.size() - 1)
 	{
 		return 0.0f;
 	}
 
-	CWOWColor *pColor = m_vecColor[nID];
+	WOWColor *pColor = m_vecColor[nID];
 	if (pColor == NULL)
 	{
 		return 0.0f;
@@ -1179,10 +1180,10 @@ float CWOWColorGroup::GetColor(int nID, int nAnimId)
 }
 
 //--------------------------------
-//--------------CMdxMesh--------------
+//--------------Mesh--------------
 //--------------------------------
-CMdxMesh::CMdxMesh(CString szGroup, CString szName)
-	:CResource(szGroup, szName)
+Mesh::Mesh(String szGroup, String szName)
+	:Resource(szGroup, szName)
 {
 	m_szName = szName;
 	m_pGeometry = NULL;
@@ -1193,12 +1194,12 @@ CMdxMesh::CMdxMesh(CString szGroup, CString szName)
 	m_nFrame = 0;
 }
 
-CMdxMesh::~CMdxMesh()
+Mesh::~Mesh()
 {
 
 }
 
-bool CMdxMesh::LoadImpl()
+bool Mesh::LoadImpl()
 {
 	// load mdx mesh ...
 	if (m_pDataStream == NULL) return false;
@@ -1207,8 +1208,8 @@ bool CMdxMesh::LoadImpl()
 	LoadFromMdxFile(pBuf, nSize);
 
 	// load mdx mesh skeleton ...
-	CString szSket = CStringUtil::Combine(m_szName, ".skeleton", true);
-	CDataStream *pSketStream = CResourceGroupManager::Instance().OpenResource(m_szGroup, szSket);
+	String szSket = StringUtil::Combine(m_szName, ".skeleton", true);
+	DataStream *pSketStream = ResourceGroupManager::Instance().OpenResource(m_szGroup, szSket);
 	if (pSketStream != NULL)
 	{
 		nSize = pSketStream->GetSize();
@@ -1221,40 +1222,40 @@ bool CMdxMesh::LoadImpl()
 	int nChunkNum = m_pGeometry->GetChunkNum();
 	for (int nChunk = 0; nChunk < nChunkNum; nChunk++)
 	{
-		CMdxGeoChunk *pChunk = m_pGeometry->GetChunk(nChunk);
+		GeoChunk *pChunk = m_pGeometry->GetChunk(nChunk);
 		int nMatId = pChunk->GetMaterialId();
-		CMdxMaterial *pMaterial = m_pMaterials->GetMaterial(nMatId);
-		CString szMat = CStringUtil::Combine(m_szName, pMaterial->GetTexName(), false);
-		pMaterial->SetBaseTexture(CTextureManager::Instance().Load(m_szGroup, szMat));
+		Material *pMaterial = m_pMaterials->GetMaterial(nMatId);
+		String szMat = StringUtil::Combine(m_szName, pMaterial->GetTexName(), false);
+		pMaterial->SetBaseTexture(TextureManager::Instance().Load(m_szGroup, szMat));
 
 		if (pMaterial->HasSpecular())
 		{
-			szMat = CStringUtil::Combine(m_szName, pMaterial->GetSpecular(), false);
-			CTextureManager::Instance().Load(m_szGroup, szMat);
+			szMat = StringUtil::Combine(m_szName, pMaterial->GetSpecular(), false);
+			TextureManager::Instance().Load(m_szGroup, szMat);
 		}
 	}
 
 	// vertex buffer and index buffer
 	for (int nChunk = 0; nChunk < nChunkNum; nChunk++)
 	{
-		CMdxGeoChunk *pChunk = m_pGeometry->GetChunk(nChunk);
+		GeoChunk *pChunk = m_pGeometry->GetChunk(nChunk);
 		if (pChunk == NULL)
 		{
 			continue;
 		}
 
-		CVector *pVertices = pChunk->GetVertices();
-		CVector *pNormals = pChunk->GetNormals();
-		CVector2D *pUVs = pChunk->GetUVs();
+		Vector3 *pVertices = pChunk->GetVertices();
+		Vector3 *pNormals = pChunk->GetNormals();
+		Vector2 *pUVs = pChunk->GetUVs();
 		WORD *pIndices = pChunk->GetIndices();
 		int nVertexNum = pChunk->GetVertexNum();
 		int nIndexNum = pChunk->GetIndexNum();
 
-		CHardwareVertexBuffer *pVertBuf = CHardwareBufferManager::Instance().CreateVertexBuffer(
-					32, nVertexNum, CHardwareBuffer::HBU_WRITE_ONLY);
+		HardwareVertexBuffer *pVertBuf = HardwareBufferManager::Instance().CreateVertexBuffer(
+					32, nVertexNum, HardwareBuffer::HBU_WRITE_ONLY);
 		if (pVertBuf != NULL)
 		{		
-			CMdxMeshFormat *pBuf = (CMdxMeshFormat*)pVertBuf->Lock(CHardwareBuffer::HBL_DISCARD);
+			MeshFormat *pBuf = (MeshFormat*)pVertBuf->Lock(HardwareBuffer::HBL_DISCARD);
 			if (pBuf != NULL)
 			{
 				for (int nVertex = 0; nVertex < nVertexNum; nVertex++, pBuf++)
@@ -1267,24 +1268,24 @@ bool CMdxMesh::LoadImpl()
 			pVertBuf->Unlock();
 		}
 
-		CHardwareIndexBuffer *pIndexBuf = CHardwareBufferManager::Instance().CreateIndexBuffer(
-			nIndexNum, CHardwareIndexBuffer::IT_16BIT, CHardwareBuffer::HBU_WRITE_ONLY);
+		HardwareIndexBuffer *pIndexBuf = HardwareBufferManager::Instance().CreateIndexBuffer(
+			nIndexNum, HardwareIndexBuffer::IT_16BIT, HardwareBuffer::HBU_WRITE_ONLY);
 		if (pIndexBuf != NULL)
 		{
-			void *pBuf = pIndexBuf->Lock(CHardwareBuffer::HBL_DISCARD);
+			void *pBuf = pIndexBuf->Lock(HardwareBuffer::HBL_DISCARD);
 			if (pBuf != NULL)
 				memcpy(pBuf, pIndices, nIndexNum * sizeof(WORD));
 			pIndexBuf->Unlock();
 		}
 
 		// add render op ...
-		CRenderOperation *pRenderOp = pChunk->GetRenderOp();
+		RenderOperation *pRenderOp = pChunk->GetRenderOp();
 		if (pRenderOp != NULL)
 		{
-			CVertexData *pVertexData = new CVertexData;
-			CIndexData *pIndexData = new CIndexData;
-			CVertexBufferBinding *pBing = pVertexData->GetVertexBufferBinding();
-			CVertexDeclaration *pDecl = pVertexData->GetVertexDeclaration();	
+			VertexData *pVertexData = new VertexData;
+			IndexData *pIndexData = new IndexData;
+			VertexBufferBinding *pBing = pVertexData->GetVertexBufferBinding();
+			VertexDeclaration *pDecl = pVertexData->GetVertexDeclaration();	
 			pVertexData->SetVertexRange(0, pChunk->GetVertexNum());
 			pIndexData->SetIndexRange(0, pChunk->GetIndexNum());
 			pIndexData->SetIndexBuffer(pIndexBuf);
@@ -1296,16 +1297,16 @@ bool CMdxMesh::LoadImpl()
 			pRenderOp->m_bUseIndex = true;
 			pRenderOp->m_pVertexData = pVertexData;
 			pRenderOp->m_pIndexData = pIndexData;
-			pRenderOp->m_OpType = CRenderOperation::OT_TRIANGLE_LIST;
+			pRenderOp->m_OpType = RenderOperation::OT_TRIANGLE_LIST;
 		}
 	}
 
 	return true;
 }
 
-bool CMdxMesh::LoadFromMdxFile(BYTE* pbyBuffer, int nBufferSize)
+bool Mesh::LoadFromMdxFile(BYTE* pbyBuffer, int nBufferSize)
 {
-	CMdxPointer p(pbyBuffer);
+	MeshPointer p(pbyBuffer);
 	while (p.byte < pbyBuffer + nBufferSize)
 	{
 		switch(MDX_TAG(*p.dw))
@@ -1347,9 +1348,9 @@ bool CMdxMesh::LoadFromMdxFile(BYTE* pbyBuffer, int nBufferSize)
 	return true;
 }
 
-bool CMdxMesh::LoadFromSketFile(byte *pbyBuffer, int nBufSize)
+bool Mesh::LoadFromSketFile(byte *pbyBuffer, int nBufSize)
 {
-	CMdxPointer p(pbyBuffer);
+	MeshPointer p(pbyBuffer);
 
 	while(p.byte < pbyBuffer + nBufSize)
 	{
@@ -1384,17 +1385,17 @@ bool CMdxMesh::LoadFromSketFile(byte *pbyBuffer, int nBufSize)
 	return true;
 }
 
-void CMdxMesh::UpdateSkeleton(int nAnimID, bool bSingleFrame, int nFrame)
+void Mesh::UpdateSkeleton(int nAnimID, bool bSingleFrame, int nFrame)
 {
 	int t = 0;
 	if (m_pAnimSet)
 	{
-		CBaseAnim *pAnim = m_pAnimSet->FindAnim(nAnimID);
+		Animation *pAnim = m_pAnimSet->FindAnim(nAnimID);
 		if (pAnim)
 		{
-			if (m_pAnimSet->GetType() == CMdxAnimSet::ANIMSET_TYPE_WOW)
+			if (m_pAnimSet->GetType() == AnimationSet::ANIMSET_TYPE_WOW)
 			{
-				CWOWAnim *pWOWAnim = (CWOWAnim*)pAnim;
+				WOWAnimation *pWOWAnim = (WOWAnimation*)pAnim;
 
 				DWORD dwStartTime = pWOWAnim->GetStartTime();
 				DWORD dwEndTime = pWOWAnim->GetEndTime();
@@ -1430,16 +1431,16 @@ void CMdxMesh::UpdateSkeleton(int nAnimID, bool bSingleFrame, int nFrame)
 	}	
 }
 
-DWORD CMdxMesh::GetCurAnimStartTime(int nAnimId)
+DWORD Mesh::GetCurAnimStartTime(int nAnimId)
 {
 	if (m_pAnimSet)
 	{
-		CBaseAnim *pAnim = m_pAnimSet->FindAnim(nAnimId);
+		Animation *pAnim = m_pAnimSet->FindAnim(nAnimId);
 		if (pAnim)
 		{
-			if (m_pAnimSet->GetType() == CMdxAnimSet::ANIMSET_TYPE_WOW)
+			if (m_pAnimSet->GetType() == AnimationSet::ANIMSET_TYPE_WOW)
 			{
-				CWOWAnim *pWOWAnim = (CWOWAnim*)pAnim;
+				WOWAnimation *pWOWAnim = (WOWAnimation*)pAnim;
 
 				DWORD dwStartTime = pWOWAnim->GetStartTime();
 				return dwStartTime;
@@ -1450,16 +1451,16 @@ DWORD CMdxMesh::GetCurAnimStartTime(int nAnimId)
 	return 0;
 }
 
-DWORD CMdxMesh::GetCurAnimEndTime(int nAnimId)
+DWORD Mesh::GetCurAnimEndTime(int nAnimId)
 {
 	if (m_pAnimSet)
 	{
-		CBaseAnim *pAnim = m_pAnimSet->FindAnim(nAnimId);
+		Animation *pAnim = m_pAnimSet->FindAnim(nAnimId);
 		if (pAnim)
 		{
-			if (m_pAnimSet->GetType() == CMdxAnimSet::ANIMSET_TYPE_WOW)
+			if (m_pAnimSet->GetType() == AnimationSet::ANIMSET_TYPE_WOW)
 			{
-				CWOWAnim *pWOWAnim = (CWOWAnim*)pAnim;
+				WOWAnimation *pWOWAnim = (WOWAnimation*)pAnim;
 
 				DWORD dwEndTime = pWOWAnim->GetEndTime();
 				return dwEndTime;
@@ -1470,47 +1471,45 @@ DWORD CMdxMesh::GetCurAnimEndTime(int nAnimId)
 	return 0;
 }
 
-void CMdxMesh::ReadGeometry(CMdxPointer inP, int size)
+void Mesh::ReadGeometry(MeshPointer inP, int size)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_GeometryMB.Create(p.byte, size);
-	m_pGeometry = new CMdxGeometry(this);
+	m_pGeometry = new Geometry(this);
 	m_pGeometry->ReadGeometry(m_GeometryMB.GetPointer(), m_GeometryMB.GetBufferSize());
 }
 
-void CMdxMesh::ReadMaterials(CMdxPointer inP, int iSize)
+void Mesh::ReadMaterials(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_MaterialsMB.Create(p.byte, iSize);
-	m_pMaterials = new CMdxMaterials(this);
+	m_pMaterials = new Materials(this);
 	m_pMaterials->ReadMaterials(m_MaterialsMB.GetPointer(), m_MaterialsMB.GetBufferSize());
 }
 
-void CMdxMesh::ReadWOWColor(CMdxPointer inP, int iSize)
+void Mesh::ReadWOWColor(MeshPointer inP, int iSize)
 {
-	CMdxPointer p(inP.p);
+	MeshPointer p(inP.p);
 
 	m_WOWColorMB.Create(p.byte, iSize);
-	m_pWOWColorGroup = new CWOWColorGroup(this);
+	m_pWOWColorGroup = new WOWColorGroup(this);
 	m_pWOWColorGroup->ReadWOWColor(m_WOWColorMB.GetPointer(), m_WOWColorMB.GetBufferSize());
 }
 
-void CMdxMesh::ReadSkeleton(CMdxPointer inP, int iSize)
+void Mesh::ReadSkeleton(MeshPointer inP, int iSize)
 {
 	m_SkeletonMB.Create(inP.byte, iSize);
-	m_pSkeleton = new CMdxSkeleton(this);
+	m_pSkeleton = new Skeleton(this);
 	m_pSkeleton->ReadSkeleton(m_SkeletonMB.GetPointer(), m_SkeletonMB.GetBufferSize());
 }
 
-void CMdxMesh::ReadAnimSet(CMdxPointer inP, int iSize)
+void Mesh::ReadAnimSet(MeshPointer inP, int iSize)
 {
 	m_AnimSetMB.Create(inP.byte, iSize);
-	m_pAnimSet = new CMdxAnimSet;
+	m_pAnimSet = new AnimationSet;
 	m_pAnimSet->ReadAnimSet(m_AnimSetMB.GetPointer(), m_AnimSetMB.GetBufferSize());
 }
 
 NAMESPACEEND
-
-#endif
