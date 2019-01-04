@@ -53,9 +53,6 @@ typedef unsigned __int64 uint64;
 #include <sstream>
 using namespace std;
 
-inline DWORD HQ_TimeGetTime()
-{
-	return timeGetTime();
-}
+#pragma comment( lib,"winmm.lib" )
 
 #endif

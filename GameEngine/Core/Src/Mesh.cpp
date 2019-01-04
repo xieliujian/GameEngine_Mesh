@@ -1410,13 +1410,13 @@ void Mesh::UpdateSkeleton(int nAnimID, bool bSingleFrame, int nFrame)
 				}
 				else
 				{
-					static DWORD dwLastTime = HQ_TimeGetTime();
-					DWORD dwCurTime = HQ_TimeGetTime();
+					static DWORD dwLastTime = Function::HQ_TimeGetTime();
+					DWORD dwCurTime = Function::HQ_TimeGetTime();
 					t = dwStartTime + (dwCurTime - dwLastTime);
 					while (t >= dwEndTime)
 					{
 						t -= (dwEndTime - dwStartTime);
-						dwLastTime = HQ_TimeGetTime();
+						dwLastTime = Function::HQ_TimeGetTime();
 					}
 				}
 			}

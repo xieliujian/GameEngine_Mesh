@@ -18,6 +18,19 @@ Application::~Application()
 
 bool Application::Init()
 {
+	m_pLogManager = new LogManager;
+	m_pLogManager->CreateLog("Log.txt", true);
+
+	// Archive Manager
+	m_pArchiveManager = new ArchiveManager;
+	m_pFileArchiveFactory = new FileArchiveFactory;
+	m_pArchiveManager->AddArchiveFactory(m_pFileArchiveFactory);
+	m_pZipArchiveFactory = new ZipArchiveFactory;
+	m_pArchiveManager->AddArchiveFactory(m_pZipArchiveFactory);
+
+	m_pResourceGroupManager = new ResourceGroupManager;
+	m_pMeshManager = new MeshManager;
+
 	return true;
 }
 

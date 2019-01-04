@@ -10,6 +10,7 @@
 #include "Quaternion.h"
 #include "MyString.h"
 #include "Resource.h"
+#include "Function.h"
 
 NAMESPACEBEGIN(GameEngine)
 

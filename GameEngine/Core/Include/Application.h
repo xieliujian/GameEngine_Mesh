@@ -6,6 +6,7 @@
 #include <windows.h>
 #include "Archive.h"
 #include "ResourceManager.h"
+#include "Log.h"
 
 NAMESPACEBEGIN(GameEngine)
 
@@ -35,11 +36,12 @@ protected:
 	int mClientHeight;
 	Color mClearColor;
 
+	LogManager *m_pLogManager;
 	FileArchiveFactory *m_pFileArchiveFactory;
 	ZipArchiveFactory *m_pZipArchiveFactory;
 	ArchiveManager *m_pArchiveManager;
 	ResourceGroupManager *m_pResourceGroupManager;
-	MeshManager *m_pMdxMeshManager;
+	MeshManager *m_pMeshManager;
 };
 
 NAMESPACEEND

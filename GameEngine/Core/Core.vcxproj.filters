@@ -84,6 +84,12 @@
     <ClInclude Include="Include\File.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Function.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\Application.cpp">
@@ -147,6 +153,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Src\File.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Log.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Function.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
