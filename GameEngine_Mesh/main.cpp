@@ -1,18 +1,18 @@
 
-#include "D3DApplication.h"
+#include "D3D11Application.h"
 #include <Windows.h>
 #include "Color.h"
 
 using namespace GameEngine;
 
-class GameEngine_Mesh : public D3DApplication
+class GameEngine_Mesh : public D3D11Application
 {
 public:
 	GameEngine_Mesh(HINSTANCE hInstance);
 };
 
 GameEngine_Mesh::GameEngine_Mesh(HINSTANCE hInstance)
-	:D3DApplication(hInstance)
+	:D3D11Application(hInstance)
 {
 
 }

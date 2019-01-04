@@ -4,6 +4,8 @@
 
 #include "Core.h"
 #include <windows.h>
+#include "Archive.h"
+#include "ResourceManager.h"
 
 NAMESPACEBEGIN(GameEngine)
 
@@ -13,7 +15,7 @@ public:
 	Application(HINSTANCE hInstance);
 	~Application();
 
-	virtual bool Init() = 0;
+	virtual bool Init();
 	virtual int Run() = 0;
 	virtual void Clear() = 0;
 	virtual void Present() = 0;
@@ -32,6 +34,12 @@ protected:
 	int mClientWidth;
 	int mClientHeight;
 	Color mClearColor;
+
+	FileArchiveFactory *m_pFileArchiveFactory;
+	ZipArchiveFactory *m_pZipArchiveFactory;
+	ArchiveManager *m_pArchiveManager;
+	ResourceGroupManager *m_pResourceGroupManager;
+	MeshManager *m_pMdxMeshManager;
 };
 
 NAMESPACEEND

@@ -214,7 +214,7 @@ void ResourceGroupManager::AddResourceLocation(String szArcType, String szArcNam
 		return;
 	}
 
-	Archive *pArchive = CArchiveManager::Instance().Load(szArcName, szArcType);
+	Archive *pArchive = ArchiveManager::Instance().Load(szArcName, szArcType);
 	if (pArchive == NULL)
 	{
 		return;

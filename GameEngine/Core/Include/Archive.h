@@ -168,20 +168,20 @@ public:
 	virtual void Close();
 };
 
-class CArchiveManager
+class ArchiveManager
 {
 public:
-	CArchiveManager();
-	~CArchiveManager();
+	ArchiveManager();
+	~ArchiveManager();
 
-	static CArchiveManager& Instance();
+	static ArchiveManager& Instance();
 
 	void AddArchiveFactory(ArchiveFactory *pArchFactory);
 	Archive* Load(String filename, String szType);
 	void UnLoad(char *filename);
 	Archive* Find(String filename);
 private:
-	static CArchiveManager *s_Instance;
+	static ArchiveManager *s_Instance;
 
 	typedef std::map<String, ArchiveFactory*> ArchiveFactoryMap;
 	typedef std::map<String, Archive*> ArchiveMap;

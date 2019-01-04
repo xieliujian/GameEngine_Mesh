@@ -11,7 +11,7 @@ NAMESPACEBEGIN(GameEngine)
 // -------------------------
 // Global Param
 // -------------------------
-CArchiveManager* CArchiveManager::s_Instance = NULL;
+ArchiveManager* ArchiveManager::s_Instance = NULL;
 
 // -------------------------
 // Archive
@@ -361,32 +361,32 @@ void ZipDataStream::Close()
 }
 
 // -------------------------
-// CArchiveManager
+// ArchiveManager
 // -------------------------
-CArchiveManager::CArchiveManager()
+ArchiveManager::ArchiveManager()
 {
 	s_Instance = this;
 	m_mapFactory.clear();
 	m_mapArchive.clear();
 }
 
-CArchiveManager::~CArchiveManager()
+ArchiveManager::~ArchiveManager()
 {
 
 }
 
-CArchiveManager& CArchiveManager::Instance()
+ArchiveManager& ArchiveManager::Instance()
 {
 	return *s_Instance;
 }
 
-void CArchiveManager::AddArchiveFactory(ArchiveFactory *pArchFactory)
+void ArchiveManager::AddArchiveFactory(ArchiveFactory *pArchFactory)
 {
 	String &type = pArchFactory->GetType();
 	m_mapFactory[type] = pArchFactory;
 }
 
-Archive* CArchiveManager::Load(String filename, String szType)
+Archive* ArchiveManager::Load(String filename, String szType)
 {
 	ArchiveMap::iterator iter = m_mapArchive.find(filename);
 	if (iter != m_mapArchive.end())
@@ -415,7 +415,7 @@ Archive* CArchiveManager::Load(String filename, String szType)
 	return pArchive;
 }
 
-void CArchiveManager::UnLoad(char *filename)
+void ArchiveManager::UnLoad(char *filename)
 {
 	ArchiveMap::iterator iter = m_mapArchive.find(filename);
 	if (iter == m_mapArchive.end())
@@ -442,7 +442,7 @@ void CArchiveManager::UnLoad(char *filename)
 	}
 }
 
-Archive* CArchiveManager::Find(String filename)
+Archive* ArchiveManager::Find(String filename)
 {
 	ArchiveMap::iterator iter = m_mapArchive.find(filename);
 	if (iter != m_mapArchive.end())

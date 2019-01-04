@@ -102,11 +102,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Src\D3DApplication.cpp" />
+    <ClCompile Include="Src\D3D11Application.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\D3DApplication.h" />
-    <ClInclude Include="Include\D3DUtil.h" />
+    <ClInclude Include="Include\D3D11Application.h" />
+    <ClInclude Include="Include\D3D11Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

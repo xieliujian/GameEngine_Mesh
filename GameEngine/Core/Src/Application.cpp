@@ -16,4 +16,9 @@ Application::~Application()
 
 }
 
+bool Application::Init()
+{
+	return true;
+}
+
 NAMESPACEEND
